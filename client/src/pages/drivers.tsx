@@ -29,6 +29,26 @@ export default function Drivers() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/drivers/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+      toast({
+        title: "Driver deleted",
+        description: "The driver has been removed from the system.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete driver. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredDrivers = drivers.filter((driver) => {
     const matchesSearch = 
       driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,6 +62,12 @@ export default function Drivers() {
       title: "Calling driver",
       description: `Initiating call to ${driver.name} at ${driver.phone}`,
     });
+  };
+
+  const handleDelete = (driver: Driver) => {
+    if (confirm(`Are you sure you want to delete ${driver.name}?`)) {
+      deleteMutation.mutate(driver.id);
+    }
   };
 
   if (isLoading) {
@@ -136,6 +162,7 @@ export default function Drivers() {
               key={driver.id} 
               driver={driver} 
               onCall={handleCall}
+              onDelete={handleDelete}
             />
           ))}
         </div>

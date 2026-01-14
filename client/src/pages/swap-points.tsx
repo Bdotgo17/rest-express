@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Search, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { SwapPointCard } from "@/components/swap-point-card";
 import { AddSwapPointDialog } from "@/components/add-swap-point-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SwapPoint, Swap } from "@shared/schema";
 
 export default function SwapPoints() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
   const { data: swapPoints = [], isLoading } = useQuery<SwapPoint[]>({
     queryKey: ["/api/swap-points"],
@@ -18,6 +21,32 @@ export default function SwapPoints() {
   const { data: swaps = [] } = useQuery<Swap[]>({
     queryKey: ["/api/swaps"],
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/swap-points/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/swap-points"] });
+      toast({
+        title: "Swap point deleted",
+        description: "The swap point has been removed from the system.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete swap point. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDelete = (swapPoint: SwapPoint) => {
+    if (confirm(`Are you sure you want to delete ${swapPoint.name}?`)) {
+      deleteMutation.mutate(swapPoint.id);
+    }
+  };
 
   const getActiveSwapsCount = (swapPointId: string) => {
     return swaps.filter(
@@ -109,6 +138,7 @@ export default function SwapPoints() {
               key={swapPoint.id} 
               swapPoint={swapPoint}
               activeSwaps={getActiveSwapsCount(swapPoint.id)}
+              onDelete={handleDelete}
             />
           ))}
         </div>

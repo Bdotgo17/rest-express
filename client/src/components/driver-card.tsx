@@ -1,16 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Phone, MapPin, Truck } from "lucide-react";
+import { Phone, MapPin, Truck, Trash2 } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import type { Driver, DriverStatus } from "@shared/schema";
 
 interface DriverCardProps {
   driver: Driver;
   onCall?: (driver: Driver) => void;
+  onDelete?: (driver: Driver) => void;
 }
 
-export function DriverCard({ driver, onCall }: DriverCardProps) {
+export function DriverCard({ driver, onCall, onDelete }: DriverCardProps) {
   const initials = driver.name
     .split(" ")
     .map((n) => n[0])
@@ -68,14 +69,25 @@ export function DriverCard({ driver, onCall }: DriverCardProps) {
             </div>
           </div>
           
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onCall?.(driver)}
-            data-testid={`button-call-driver-${driver.id}`}
-          >
-            <Phone className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onCall?.(driver)}
+              data-testid={`button-call-driver-${driver.id}`}
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onDelete?.(driver)}
+              className="text-destructive hover:text-destructive"
+              data-testid={`button-delete-driver-${driver.id}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

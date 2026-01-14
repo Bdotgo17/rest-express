@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Fuel, ParkingCircle, Coffee } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Users, Fuel, ParkingCircle, Coffee, Trash2 } from "lucide-react";
 import type { SwapPoint } from "@shared/schema";
 
 interface SwapPointCardProps {
   swapPoint: SwapPoint;
   activeSwaps?: number;
+  onDelete?: (swapPoint: SwapPoint) => void;
 }
 
 const amenityIcons: Record<string, React.ReactNode> = {
@@ -14,7 +16,7 @@ const amenityIcons: Record<string, React.ReactNode> = {
   rest: <Coffee className="h-4 w-4" />,
 };
 
-export function SwapPointCard({ swapPoint, activeSwaps = 0 }: SwapPointCardProps) {
+export function SwapPointCard({ swapPoint, activeSwaps = 0, onDelete }: SwapPointCardProps) {
   const capacityPercentage = (activeSwaps / swapPoint.capacity) * 100;
   const capacityColor = capacityPercentage >= 80 
     ? "bg-red-500" 
@@ -69,6 +71,19 @@ export function SwapPointCard({ swapPoint, activeSwaps = 0 }: SwapPointCardProps
             ))}
           </div>
         )}
+        
+        <div className="pt-2 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDelete?.(swapPoint)}
+            className="w-full text-destructive hover:text-destructive"
+            data-testid={`button-delete-swap-point-${swapPoint.id}`}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
