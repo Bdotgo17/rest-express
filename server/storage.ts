@@ -1,10 +1,12 @@
 import { 
+  users, drivers, swapPoints, swaps,
   type User, type InsertUser, 
   type Driver, type InsertDriver,
   type SwapPoint, type InsertSwapPoint,
   type Swap, type InsertSwap
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -34,265 +36,97 @@ export interface IStorage {
   deleteSwap(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private drivers: Map<string, Driver>;
-  private swapPoints: Map<string, SwapPoint>;
-  private swaps: Map<string, Swap>;
-
-  constructor() {
-    this.users = new Map();
-    this.drivers = new Map();
-    this.swapPoints = new Map();
-    this.swaps = new Map();
-    
-    this.seedData();
-  }
-
-  private seedData() {
-    const driver1: Driver = {
-      id: randomUUID(),
-      name: "John Martinez",
-      phone: "+1 555-123-4567",
-      truckId: "TRK-001",
-      status: "en-route",
-      currentLocation: "Highway 101, Mile 45",
-      latitude: "33.4484",
-      longitude: "-112.0740",
-    };
-    
-    const driver2: Driver = {
-      id: randomUUID(),
-      name: "Sarah Johnson",
-      phone: "+1 555-234-5678",
-      truckId: "TRK-002",
-      status: "waiting",
-      currentLocation: "Central Hub Terminal",
-      latitude: "33.4500",
-      longitude: "-112.0660",
-    };
-    
-    const driver3: Driver = {
-      id: randomUUID(),
-      name: "Michael Chen",
-      phone: "+1 555-345-6789",
-      truckId: "TRK-003",
-      status: "available",
-      currentLocation: "East Distribution Center",
-      latitude: "32.7767",
-      longitude: "-96.7970",
-    };
-    
-    const driver4: Driver = {
-      id: randomUUID(),
-      name: "Emily Davis",
-      phone: "+1 555-456-7890",
-      truckId: "TRK-004",
-      status: "delayed",
-      currentLocation: "Interstate 95, Traffic",
-      latitude: "32.7800",
-      longitude: "-96.8000",
-    };
-    
-    this.drivers.set(driver1.id, driver1);
-    this.drivers.set(driver2.id, driver2);
-    this.drivers.set(driver3.id, driver3);
-    this.drivers.set(driver4.id, driver4);
-    
-    const swapPoint1: SwapPoint = {
-      id: randomUUID(),
-      name: "Central Hub Terminal",
-      address: "1500 Logistics Blvd, Phoenix, AZ 85001",
-      capacity: 6,
-      amenities: ["parking", "fuel", "rest"],
-      latitude: "33.4484",
-      longitude: "-112.0740",
-    };
-    
-    const swapPoint2: SwapPoint = {
-      id: randomUUID(),
-      name: "East Distribution Center",
-      address: "2800 Commerce Dr, Dallas, TX 75201",
-      capacity: 4,
-      amenities: ["parking", "fuel"],
-      latitude: "32.7767",
-      longitude: "-96.7970",
-    };
-    
-    const swapPoint3: SwapPoint = {
-      id: randomUUID(),
-      name: "Highway 101 Rest Stop",
-      address: "Mile Marker 78, Highway 101, CA",
-      capacity: 3,
-      amenities: ["parking", "rest"],
-      latitude: "34.0522",
-      longitude: "-118.2437",
-    };
-    
-    this.swapPoints.set(swapPoint1.id, swapPoint1);
-    this.swapPoints.set(swapPoint2.id, swapPoint2);
-    this.swapPoints.set(swapPoint3.id, swapPoint3);
-    
-    const now = new Date();
-    const swap1: Swap = {
-      id: randomUUID(),
-      driver1Id: driver1.id,
-      driver2Id: driver2.id,
-      swapPointId: swapPoint1.id,
-      customLocation: null,
-      customLatitude: null,
-      customLongitude: null,
-      scheduledTime: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
-      status: "scheduled",
-      notes: "Standard cargo handoff",
-    };
-    
-    const swap2: Swap = {
-      id: randomUUID(),
-      driver1Id: driver3.id,
-      driver2Id: driver4.id,
-      swapPointId: swapPoint2.id,
-      customLocation: null,
-      customLatitude: null,
-      customLongitude: null,
-      scheduledTime: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-      status: "in-progress",
-      notes: "Priority delivery - refrigerated cargo",
-    };
-    
-    this.swaps.set(swap1.id, swap1);
-    this.swaps.set(swap2.id, swap2);
-  }
-
+export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   // Drivers
   async getDrivers(): Promise<Driver[]> {
-    return Array.from(this.drivers.values());
+    return await db.select().from(drivers);
   }
 
   async getDriver(id: string): Promise<Driver | undefined> {
-    return this.drivers.get(id);
+    const [driver] = await db.select().from(drivers).where(eq(drivers.id, id));
+    return driver || undefined;
   }
 
   async createDriver(insertDriver: InsertDriver): Promise<Driver> {
-    const id = randomUUID();
-    const driver: Driver = { 
-      id,
-      name: insertDriver.name,
-      phone: insertDriver.phone,
-      truckId: insertDriver.truckId,
-      status: insertDriver.status ?? "available",
-      currentLocation: insertDriver.currentLocation ?? null,
-      latitude: insertDriver.latitude ?? null,
-      longitude: insertDriver.longitude ?? null,
-    };
-    this.drivers.set(id, driver);
+    const [driver] = await db.insert(drivers).values(insertDriver).returning();
     return driver;
   }
 
   async updateDriver(id: string, updates: Partial<InsertDriver>): Promise<Driver | undefined> {
-    const driver = this.drivers.get(id);
-    if (!driver) return undefined;
-    const updated = { ...driver, ...updates };
-    this.drivers.set(id, updated);
-    return updated;
+    const [driver] = await db.update(drivers).set(updates).where(eq(drivers.id, id)).returning();
+    return driver || undefined;
   }
 
   async deleteDriver(id: string): Promise<boolean> {
-    return this.drivers.delete(id);
+    const result = await db.delete(drivers).where(eq(drivers.id, id)).returning();
+    return result.length > 0;
   }
 
   // Swap Points
   async getSwapPoints(): Promise<SwapPoint[]> {
-    return Array.from(this.swapPoints.values());
+    return await db.select().from(swapPoints);
   }
 
   async getSwapPoint(id: string): Promise<SwapPoint | undefined> {
-    return this.swapPoints.get(id);
+    const [swapPoint] = await db.select().from(swapPoints).where(eq(swapPoints.id, id));
+    return swapPoint || undefined;
   }
 
   async createSwapPoint(insertSwapPoint: InsertSwapPoint): Promise<SwapPoint> {
-    const id = randomUUID();
-    const swapPoint: SwapPoint = { 
-      id,
-      name: insertSwapPoint.name,
-      address: insertSwapPoint.address,
-      capacity: insertSwapPoint.capacity ?? 4,
-      amenities: insertSwapPoint.amenities ?? null,
-      latitude: insertSwapPoint.latitude ?? null,
-      longitude: insertSwapPoint.longitude ?? null,
-    };
-    this.swapPoints.set(id, swapPoint);
+    const [swapPoint] = await db.insert(swapPoints).values(insertSwapPoint).returning();
     return swapPoint;
   }
 
   async updateSwapPoint(id: string, updates: Partial<InsertSwapPoint>): Promise<SwapPoint | undefined> {
-    const swapPoint = this.swapPoints.get(id);
-    if (!swapPoint) return undefined;
-    const updated = { ...swapPoint, ...updates };
-    this.swapPoints.set(id, updated);
-    return updated;
+    const [swapPoint] = await db.update(swapPoints).set(updates).where(eq(swapPoints.id, id)).returning();
+    return swapPoint || undefined;
   }
 
   async deleteSwapPoint(id: string): Promise<boolean> {
-    return this.swapPoints.delete(id);
+    const result = await db.delete(swapPoints).where(eq(swapPoints.id, id)).returning();
+    return result.length > 0;
   }
 
   // Swaps
   async getSwaps(): Promise<Swap[]> {
-    return Array.from(this.swaps.values());
+    return await db.select().from(swaps);
   }
 
   async getSwap(id: string): Promise<Swap | undefined> {
-    return this.swaps.get(id);
+    const [swap] = await db.select().from(swaps).where(eq(swaps.id, id));
+    return swap || undefined;
   }
 
   async createSwap(insertSwap: InsertSwap): Promise<Swap> {
-    const id = randomUUID();
-    const swap: Swap = { 
-      id,
-      driver1Id: insertSwap.driver1Id,
-      driver2Id: insertSwap.driver2Id,
-      swapPointId: insertSwap.swapPointId ?? null,
-      customLocation: insertSwap.customLocation ?? null,
-      customLatitude: insertSwap.customLatitude ?? null,
-      customLongitude: insertSwap.customLongitude ?? null,
-      scheduledTime: insertSwap.scheduledTime,
-      status: insertSwap.status ?? "scheduled",
-      notes: insertSwap.notes ?? null,
-    };
-    this.swaps.set(id, swap);
+    const [swap] = await db.insert(swaps).values(insertSwap).returning();
     return swap;
   }
 
   async updateSwap(id: string, updates: Partial<InsertSwap>): Promise<Swap | undefined> {
-    const swap = this.swaps.get(id);
-    if (!swap) return undefined;
-    const updated = { ...swap, ...updates };
-    this.swaps.set(id, updated);
-    return updated;
+    const [swap] = await db.update(swaps).set(updates).where(eq(swaps.id, id)).returning();
+    return swap || undefined;
   }
 
   async deleteSwap(id: string): Promise<boolean> {
-    return this.swaps.delete(id);
+    const result = await db.delete(swaps).where(eq(swaps.id, id)).returning();
+    return result.length > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
