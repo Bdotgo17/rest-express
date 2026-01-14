@@ -1,0 +1,209 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Plus, Loader2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
+  amenities: z.array(z.string()),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+const availableAmenities = [
+  { id: "parking", label: "Parking" },
+  { id: "fuel", label: "Fuel Station" },
+  { id: "rest", label: "Rest Facilities" },
+];
+
+interface AddSwapPointDialogProps {
+  trigger?: React.ReactNode;
+}
+
+export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      capacity: 4,
+      amenities: [],
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      return apiRequest("POST", "/api/swap-points", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/swap-points"] });
+      toast({
+        title: "Swap point added",
+        description: "The swap point has been successfully added.",
+      });
+      setOpen(false);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add swap point. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button data-testid="button-add-swap-point">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Swap Point
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Swap Point</DialogTitle>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Main Street Terminal" 
+                      {...field} 
+                      data-testid="input-swap-point-name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="123 Main Street, City, State 12345" 
+                      {...field} 
+                      data-testid="input-swap-point-address"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="capacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capacity (Max Trucks)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      min={1}
+                      {...field} 
+                      data-testid="input-swap-point-capacity"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="amenities"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Amenities</FormLabel>
+                  <div className="space-y-2">
+                    {availableAmenities.map((amenity) => (
+                      <FormField
+                        key={amenity.id}
+                        control={form.control}
+                        name="amenities"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(amenity.id)}
+                                onCheckedChange={(checked) => {
+                                  const current = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...current, amenity.id]);
+                                  } else {
+                                    field.onChange(current.filter((v) => v !== amenity.id));
+                                  }
+                                }}
+                                data-testid={`checkbox-amenity-${amenity.id}`}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">
+                              {amenity.label}
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setOpen(false)}
+                data-testid="button-cancel-add-swap-point"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={mutation.isPending}
+                data-testid="button-submit-add-swap-point"
+              >
+                {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Add Swap Point
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
