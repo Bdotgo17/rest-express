@@ -8,9 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Loader2, MapPin } from "lucide-react";
+import { Plus, Loader2, MapPin, Search } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+async function geocodeAddress(address: string): Promise<{ lat: string; lon: string } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'SwapTrack/1.0' }
+    });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return { lat: data[0].lat, lon: data[0].lon };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -30,6 +46,7 @@ interface AddDriverDialogProps {
 
 export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -69,6 +86,37 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
 
   const onSubmit = (data: FormData) => {
     mutation.mutate(data);
+  };
+
+  const handleLookupLocation = async () => {
+    const location = form.getValues("currentLocation");
+    if (!location || location.length < 3) {
+      toast({
+        title: "Enter a location",
+        description: "Please enter a location first to look up coordinates.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLookingUp(true);
+    const coords = await geocodeAddress(location);
+    setIsLookingUp(false);
+    
+    if (coords) {
+      form.setValue("latitude", coords.lat);
+      form.setValue("longitude", coords.lon);
+      toast({
+        title: "Coordinates found",
+        description: "GPS coordinates have been filled in automatically.",
+      });
+    } else {
+      toast({
+        title: "Location not found",
+        description: "Could not find coordinates for this location. Please enter them manually.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -191,7 +239,21 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
                   <MapPin className="h-4 w-4 text-primary" />
                   GPS Coordinates
                 </div>
-                <span className="text-xs text-muted-foreground">Required for map display</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLookupLocation}
+                  disabled={isLookingUp}
+                  data-testid="button-lookup-location"
+                >
+                  {isLookingUp ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4 mr-2" />
+                  )}
+                  Lookup from Location
+                </Button>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField

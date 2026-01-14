@@ -8,9 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Loader2, MapPin } from "lucide-react";
+import { Plus, Loader2, MapPin, Search } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+async function geocodeAddress(address: string): Promise<{ lat: string; lon: string } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'SwapTrack/1.0' }
+    });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return { lat: data[0].lat, lon: data[0].lon };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -35,6 +51,7 @@ interface AddSwapPointDialogProps {
 
 export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -73,6 +90,37 @@ export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
 
   const onSubmit = (data: FormData) => {
     mutation.mutate(data);
+  };
+
+  const handleLookupAddress = async () => {
+    const address = form.getValues("address");
+    if (!address || address.length < 5) {
+      toast({
+        title: "Enter an address",
+        description: "Please enter an address first to look up coordinates.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLookingUp(true);
+    const coords = await geocodeAddress(address);
+    setIsLookingUp(false);
+    
+    if (coords) {
+      form.setValue("latitude", coords.lat);
+      form.setValue("longitude", coords.lon);
+      toast({
+        title: "Coordinates found",
+        description: "GPS coordinates have been filled in automatically.",
+      });
+    } else {
+      toast({
+        title: "Address not found",
+        description: "Could not find coordinates for this address. Please enter them manually.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -134,7 +182,21 @@ export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
                   <MapPin className="h-4 w-4 text-primary" />
                   GPS Coordinates
                 </div>
-                <span className="text-xs text-muted-foreground">Required for map display</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLookupAddress}
+                  disabled={isLookingUp}
+                  data-testid="button-lookup-address"
+                >
+                  {isLookingUp ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4 mr-2" />
+                  )}
+                  Lookup from Address
+                </Button>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField

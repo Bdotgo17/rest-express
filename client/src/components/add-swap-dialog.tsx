@@ -10,10 +10,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Loader2, MapPin } from "lucide-react";
+import { Plus, Loader2, MapPin, Search } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Driver, SwapPoint } from "@shared/schema";
+
+async function geocodeAddress(address: string): Promise<{ lat: string; lon: string } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'SwapTrack/1.0' }
+    });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      return { lat: data[0].lat, lon: data[0].lon };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const formSchema = z.object({
   driver1Id: z.string().min(1, "First driver is required"),
@@ -46,6 +62,7 @@ interface AddSwapDialogProps {
 
 export function AddSwapDialog({ trigger }: AddSwapDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
   const { toast } = useToast();
 
   const { data: drivers = [] } = useQuery<Driver[]>({
@@ -107,6 +124,37 @@ export function AddSwapDialog({ trigger }: AddSwapDialogProps) {
 
   const onSubmit = (data: FormData) => {
     mutation.mutate(data);
+  };
+
+  const handleLookupCustomLocation = async () => {
+    const location = form.getValues("customLocation");
+    if (!location || location.length < 3) {
+      toast({
+        title: "Enter a location",
+        description: "Please enter a location first to look up coordinates.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLookingUp(true);
+    const coords = await geocodeAddress(location);
+    setIsLookingUp(false);
+    
+    if (coords) {
+      form.setValue("customLatitude", coords.lat);
+      form.setValue("customLongitude", coords.lon);
+      toast({
+        title: "Coordinates found",
+        description: "GPS coordinates have been filled in automatically.",
+      });
+    } else {
+      toast({
+        title: "Location not found",
+        description: "Could not find coordinates for this location. Please enter them manually.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -214,9 +262,26 @@ export function AddSwapDialog({ trigger }: AddSwapDialogProps) {
                       />
                       
                       <div className="border rounded-md p-4 space-y-4 bg-muted/30">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <MapPin className="h-4 w-4 text-primary" />
-                          GPS Coordinates
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            GPS Coordinates
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLookupCustomLocation}
+                            disabled={isLookingUp}
+                            data-testid="button-lookup-custom-location"
+                          >
+                            {isLookingUp ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Search className="h-4 w-4 mr-2" />
+                            )}
+                            Lookup
+                          </Button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
