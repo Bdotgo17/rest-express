@@ -173,7 +173,14 @@ export class MemStorage implements IStorage {
 
   async createDriver(insertDriver: InsertDriver): Promise<Driver> {
     const id = randomUUID();
-    const driver: Driver = { ...insertDriver, id };
+    const driver: Driver = { 
+      id,
+      name: insertDriver.name,
+      phone: insertDriver.phone,
+      truckId: insertDriver.truckId,
+      status: insertDriver.status ?? "available",
+      currentLocation: insertDriver.currentLocation ?? null,
+    };
     this.drivers.set(id, driver);
     return driver;
   }
@@ -201,7 +208,13 @@ export class MemStorage implements IStorage {
 
   async createSwapPoint(insertSwapPoint: InsertSwapPoint): Promise<SwapPoint> {
     const id = randomUUID();
-    const swapPoint: SwapPoint = { ...insertSwapPoint, id };
+    const swapPoint: SwapPoint = { 
+      id,
+      name: insertSwapPoint.name,
+      address: insertSwapPoint.address,
+      capacity: insertSwapPoint.capacity ?? 4,
+      amenities: insertSwapPoint.amenities ?? null,
+    };
     this.swapPoints.set(id, swapPoint);
     return swapPoint;
   }
@@ -229,7 +242,15 @@ export class MemStorage implements IStorage {
 
   async createSwap(insertSwap: InsertSwap): Promise<Swap> {
     const id = randomUUID();
-    const swap: Swap = { ...insertSwap, id };
+    const swap: Swap = { 
+      id,
+      driver1Id: insertSwap.driver1Id,
+      driver2Id: insertSwap.driver2Id,
+      swapPointId: insertSwap.swapPointId,
+      scheduledTime: insertSwap.scheduledTime,
+      status: insertSwap.status ?? "scheduled",
+      notes: insertSwap.notes ?? null,
+    };
     this.swaps.set(id, swap);
     return swap;
   }
