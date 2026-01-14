@@ -4,7 +4,7 @@
 SwapTrack is a web application for tracking and coordinating truck drivers meeting at swap points. It enables logistics teams to manage drivers, swap locations, and schedule driver handoffs efficiently.
 
 ## Current State
-- **Version**: 1.1 MVP
+- **Version**: 1.2 MVP
 - **Status**: Functional with in-memory storage and GPS/Map features
 - **Last Updated**: January 2026
 
@@ -14,7 +14,17 @@ SwapTrack is a web application for tracking and coordinating truck drivers meeti
 - **Swap Points**: Manage meeting locations with capacity tracking, amenities, and GPS coordinates
 - **Swaps**: Schedule and track driver swap meetings with existing swap points or custom GPS locations
 - **Interactive Map**: Visual map display showing driver locations (color-coded by status) and swap points using Leaflet
+- **Address Lookup**: Automatically convert addresses to GPS coordinates using OpenStreetMap Nominatim API
+- **Driver Mobile App**: Progressive Web App (PWA) at `/driver-app` for drivers to share their GPS location from their phones
 - **Dark Mode**: Full dark/light theme support
+
+## Driver Mobile App
+Accessible at `/driver-app`, this mobile-friendly page allows drivers to:
+- Select their profile from the driver list
+- Update their status (available, en-route, waiting, delayed)
+- Share their GPS location automatically (updates every 30 seconds when tracking is enabled)
+- Manually update location on demand
+- Can be added to phone home screen as an installable app (PWA)
 
 ## Project Architecture
 
