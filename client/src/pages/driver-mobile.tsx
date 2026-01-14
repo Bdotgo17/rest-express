@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw } from "lucide-react";
+import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw, UserPlus, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Driver } from "@shared/schema";
@@ -31,6 +33,10 @@ export default function DriverMobile() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerName, setRegisterName] = useState("");
+  const [registerPhone, setRegisterPhone] = useState("");
+  const [registerTruckId, setRegisterTruckId] = useState("");
   const { toast } = useToast();
 
   const { data: drivers = [], isLoading: driversLoading } = useQuery<Driver[]>({
@@ -38,6 +44,49 @@ export default function DriverMobile() {
   });
 
   const selectedDriver = drivers.find(d => d.id === selectedDriverId);
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: { name: string; phone: string; truckId: string; status: string }) => {
+      return apiRequest("POST", "/api/drivers", data);
+    },
+    onSuccess: async (response) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+      const newDriver = await response.json();
+      setSelectedDriverId(newDriver.id);
+      setShowRegister(false);
+      setRegisterName("");
+      setRegisterPhone("");
+      setRegisterTruckId("");
+      toast({
+        title: "Registered!",
+        description: "You're now registered. Start sharing your location.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Registration failed",
+        description: "Could not register. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRegister = () => {
+    if (!registerName.trim() || !registerPhone.trim() || !registerTruckId.trim()) {
+      toast({
+        title: "Fill all fields",
+        description: "Please enter your name, phone, and truck ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+    registerMutation.mutate({
+      name: registerName.trim(),
+      phone: registerPhone.trim(),
+      truckId: registerTruckId.trim(),
+      status: "available",
+    });
+  };
 
   const updateLocationMutation = useMutation({
     mutationFn: async (data: { latitude: string; longitude: string }) => {
@@ -169,26 +218,102 @@ export default function DriverMobile() {
           <p className="text-muted-foreground text-sm">Share your location with dispatch</p>
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Select Your Name</CardTitle>
-            <CardDescription>Choose your driver profile</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
-              <SelectTrigger data-testid="select-driver-mobile">
-                <SelectValue placeholder="Select your name..." />
-              </SelectTrigger>
-              <SelectContent>
-                {drivers.map((driver) => (
-                  <SelectItem key={driver.id} value={driver.id}>
-                    {driver.name} - {driver.truckId}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        {showRegister ? (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setShowRegister(false)}
+                  data-testid="button-back-to-select"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <CardTitle className="text-lg">Register as Driver</CardTitle>
+                  <CardDescription>Add yourself to the system</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Your Name</Label>
+                <Input
+                  id="name"
+                  placeholder="John Smith"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  data-testid="input-register-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  placeholder="+1 555-123-4567"
+                  value={registerPhone}
+                  onChange={(e) => setRegisterPhone(e.target.value)}
+                  data-testid="input-register-phone"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="truckId">Truck ID</Label>
+                <Input
+                  id="truckId"
+                  placeholder="TRK-005"
+                  value={registerTruckId}
+                  onChange={(e) => setRegisterTruckId(e.target.value)}
+                  data-testid="input-register-truck"
+                />
+              </div>
+              <Button 
+                onClick={handleRegister} 
+                className="w-full"
+                disabled={registerMutation.isPending}
+                data-testid="button-register-submit"
+              >
+                {registerMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <UserPlus className="h-4 w-4 mr-2" />
+                )}
+                Register
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Select Your Name</CardTitle>
+              <CardDescription>Choose your driver profile or register</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
+                <SelectTrigger data-testid="select-driver-mobile">
+                  <SelectValue placeholder="Select your name..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((driver) => (
+                    <SelectItem key={driver.id} value={driver.id}>
+                      {driver.name} - {driver.truckId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="text-center text-sm text-muted-foreground">or</div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowRegister(true)}
+                data-testid="button-register-new"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Register as New Driver
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {selectedDriver && (
           <>
