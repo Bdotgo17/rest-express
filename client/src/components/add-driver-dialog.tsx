@@ -84,8 +84,23 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    let submitData = { ...data };
+    
+    if ((!data.latitude || !data.longitude) && data.currentLocation) {
+      setIsLookingUp(true);
+      const coords = await geocodeAddress(data.currentLocation);
+      setIsLookingUp(false);
+      
+      if (coords) {
+        submitData.latitude = coords.lat;
+        submitData.longitude = coords.lon;
+        form.setValue("latitude", coords.lat);
+        form.setValue("longitude", coords.lon);
+      }
+    }
+    
+    mutation.mutate(submitData);
   };
 
   const handleLookupLocation = async () => {

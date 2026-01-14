@@ -88,8 +88,23 @@ export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    let submitData = { ...data };
+    
+    if ((!data.latitude || !data.longitude) && data.address) {
+      setIsLookingUp(true);
+      const coords = await geocodeAddress(data.address);
+      setIsLookingUp(false);
+      
+      if (coords) {
+        submitData.latitude = coords.lat;
+        submitData.longitude = coords.lon;
+        form.setValue("latitude", coords.lat);
+        form.setValue("longitude", coords.lon);
+      }
+    }
+    
+    mutation.mutate(submitData);
   };
 
   const handleLookupAddress = async () => {
