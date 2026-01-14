@@ -33,6 +33,8 @@ export const drivers = pgTable("drivers", {
   truckId: text("truck_id").notNull(),
   status: text("status").notNull().default("available"),
   currentLocation: text("current_location"),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
 });
 
 export const insertDriverSchema = createInsertSchema(drivers).omit({ id: true });
@@ -46,6 +48,8 @@ export const swapPoints = pgTable("swap_points", {
   address: text("address").notNull(),
   capacity: integer("capacity").notNull().default(4),
   amenities: text("amenities").array(),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
 });
 
 export const insertSwapPointSchema = createInsertSchema(swapPoints).omit({ id: true });
@@ -57,7 +61,10 @@ export const swaps = pgTable("swaps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   driver1Id: varchar("driver1_id").notNull(),
   driver2Id: varchar("driver2_id").notNull(),
-  swapPointId: varchar("swap_point_id").notNull(),
+  swapPointId: varchar("swap_point_id"),
+  customLocation: text("custom_location"),
+  customLatitude: text("custom_latitude"),
+  customLongitude: text("custom_longitude"),
   scheduledTime: text("scheduled_time").notNull(),
   status: text("status").notNull().default("scheduled"),
   notes: text("notes"),

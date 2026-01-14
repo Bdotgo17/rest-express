@@ -57,6 +57,8 @@ export class MemStorage implements IStorage {
       truckId: "TRK-001",
       status: "en-route",
       currentLocation: "Highway 101, Mile 45",
+      latitude: "33.4484",
+      longitude: "-112.0740",
     };
     
     const driver2: Driver = {
@@ -66,6 +68,8 @@ export class MemStorage implements IStorage {
       truckId: "TRK-002",
       status: "waiting",
       currentLocation: "Central Hub Terminal",
+      latitude: "33.4500",
+      longitude: "-112.0660",
     };
     
     const driver3: Driver = {
@@ -75,6 +79,8 @@ export class MemStorage implements IStorage {
       truckId: "TRK-003",
       status: "available",
       currentLocation: "East Distribution Center",
+      latitude: "32.7767",
+      longitude: "-96.7970",
     };
     
     const driver4: Driver = {
@@ -84,6 +90,8 @@ export class MemStorage implements IStorage {
       truckId: "TRK-004",
       status: "delayed",
       currentLocation: "Interstate 95, Traffic",
+      latitude: "32.7800",
+      longitude: "-96.8000",
     };
     
     this.drivers.set(driver1.id, driver1);
@@ -97,6 +105,8 @@ export class MemStorage implements IStorage {
       address: "1500 Logistics Blvd, Phoenix, AZ 85001",
       capacity: 6,
       amenities: ["parking", "fuel", "rest"],
+      latitude: "33.4484",
+      longitude: "-112.0740",
     };
     
     const swapPoint2: SwapPoint = {
@@ -105,6 +115,8 @@ export class MemStorage implements IStorage {
       address: "2800 Commerce Dr, Dallas, TX 75201",
       capacity: 4,
       amenities: ["parking", "fuel"],
+      latitude: "32.7767",
+      longitude: "-96.7970",
     };
     
     const swapPoint3: SwapPoint = {
@@ -113,6 +125,8 @@ export class MemStorage implements IStorage {
       address: "Mile Marker 78, Highway 101, CA",
       capacity: 3,
       amenities: ["parking", "rest"],
+      latitude: "34.0522",
+      longitude: "-118.2437",
     };
     
     this.swapPoints.set(swapPoint1.id, swapPoint1);
@@ -125,6 +139,9 @@ export class MemStorage implements IStorage {
       driver1Id: driver1.id,
       driver2Id: driver2.id,
       swapPointId: swapPoint1.id,
+      customLocation: null,
+      customLatitude: null,
+      customLongitude: null,
       scheduledTime: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
       status: "scheduled",
       notes: "Standard cargo handoff",
@@ -135,6 +152,9 @@ export class MemStorage implements IStorage {
       driver1Id: driver3.id,
       driver2Id: driver4.id,
       swapPointId: swapPoint2.id,
+      customLocation: null,
+      customLatitude: null,
+      customLongitude: null,
       scheduledTime: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
       status: "in-progress",
       notes: "Priority delivery - refrigerated cargo",
@@ -180,6 +200,8 @@ export class MemStorage implements IStorage {
       truckId: insertDriver.truckId,
       status: insertDriver.status ?? "available",
       currentLocation: insertDriver.currentLocation ?? null,
+      latitude: insertDriver.latitude ?? null,
+      longitude: insertDriver.longitude ?? null,
     };
     this.drivers.set(id, driver);
     return driver;
@@ -214,6 +236,8 @@ export class MemStorage implements IStorage {
       address: insertSwapPoint.address,
       capacity: insertSwapPoint.capacity ?? 4,
       amenities: insertSwapPoint.amenities ?? null,
+      latitude: insertSwapPoint.latitude ?? null,
+      longitude: insertSwapPoint.longitude ?? null,
     };
     this.swapPoints.set(id, swapPoint);
     return swapPoint;
@@ -246,7 +270,10 @@ export class MemStorage implements IStorage {
       id,
       driver1Id: insertSwap.driver1Id,
       driver2Id: insertSwap.driver2Id,
-      swapPointId: insertSwap.swapPointId,
+      swapPointId: insertSwap.swapPointId ?? null,
+      customLocation: insertSwap.customLocation ?? null,
+      customLatitude: insertSwap.customLatitude ?? null,
+      customLongitude: insertSwap.customLongitude ?? null,
       scheduledTime: insertSwap.scheduledTime,
       status: insertSwap.status ?? "scheduled",
       notes: insertSwap.notes ?? null,

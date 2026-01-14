@@ -12,6 +12,7 @@ import Dashboard from "@/pages/dashboard";
 import Drivers from "@/pages/drivers";
 import SwapPoints from "@/pages/swap-points";
 import Swaps from "@/pages/swaps";
+import Map from "@/pages/map";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/drivers" component={Drivers} />
       <Route path="/swap-points" component={SwapPoints} />
       <Route path="/swaps" component={Swaps} />
+      <Route path="/map" component={Map} />
       <Route component={NotFound} />
     </Switch>
   );

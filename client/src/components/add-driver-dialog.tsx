@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, MapPin } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +18,8 @@ const formSchema = z.object({
   truckId: z.string().min(1, "Truck ID is required"),
   status: z.enum(["available", "en-route", "waiting", "delayed", "offline"]),
   currentLocation: z.string().optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -38,6 +40,8 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
       truckId: "",
       status: "available",
       currentLocation: "",
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -180,6 +184,49 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
                 </FormItem>
               )}
             />
+            
+            <div className="border rounded-md p-4 space-y-4 bg-muted/30">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <MapPin className="h-4 w-4 text-primary" />
+                GPS Coordinates
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="33.4484" 
+                          {...field} 
+                          data-testid="input-driver-latitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="-112.0740" 
+                          {...field} 
+                          data-testid="input-driver-longitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             
             <div className="flex justify-end gap-3 pt-4">
               <Button 

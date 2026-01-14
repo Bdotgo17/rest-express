@@ -36,7 +36,7 @@ export default function Swaps() {
   });
 
   const getDriver = (id: string) => drivers.find(d => d.id === id);
-  const getSwapPoint = (id: string) => swapPoints.find(sp => sp.id === id);
+  const getSwapPoint = (id: string | null) => id ? swapPoints.find(sp => sp.id === id) : null;
 
   const filteredSwaps = swaps.filter((swap) => {
     const driver1 = getDriver(swap.driver1Id);
@@ -46,7 +46,8 @@ export default function Swaps() {
     const matchesSearch = 
       driver1?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       driver2?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      swapPoint?.name.toLowerCase().includes(searchQuery.toLowerCase());
+      swapPoint?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      swap.customLocation?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || swap.status === statusFilter;
     

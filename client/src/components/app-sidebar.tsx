@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, MapPin, ArrowLeftRight, Truck } from "lucide-react";
+import { LayoutDashboard, Users, MapPin, ArrowLeftRight, Truck, Map } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -18,6 +18,11 @@ const menuItems = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Map",
+    url: "/map",
+    icon: Map,
   },
   {
     title: "Drivers",

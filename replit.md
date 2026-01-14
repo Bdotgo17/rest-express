@@ -4,15 +4,16 @@
 SwapTrack is a web application for tracking and coordinating truck drivers meeting at swap points. It enables logistics teams to manage drivers, swap locations, and schedule driver handoffs efficiently.
 
 ## Current State
-- **Version**: 1.0 MVP
-- **Status**: Functional with in-memory storage
+- **Version**: 1.1 MVP
+- **Status**: Functional with in-memory storage and GPS/Map features
 - **Last Updated**: January 2026
 
 ## Features
 - **Dashboard**: Overview with stats (active drivers, swap points, active swaps, completed today)
-- **Drivers Management**: Add, view, and track truck drivers with status indicators
-- **Swap Points**: Manage meeting locations with capacity tracking and amenities
-- **Swaps**: Schedule and track driver swap meetings
+- **Drivers Management**: Add, view, and track truck drivers with status indicators and GPS coordinates
+- **Swap Points**: Manage meeting locations with capacity tracking, amenities, and GPS coordinates
+- **Swaps**: Schedule and track driver swap meetings with existing swap points or custom GPS locations
+- **Interactive Map**: Visual map display showing driver locations (color-coded by status) and swap points using Leaflet
 - **Dark Mode**: Full dark/light theme support
 
 ## Project Architecture
@@ -65,6 +66,8 @@ SwapTrack is a web application for tracking and coordinating truck drivers meeti
 - `truckId`: Vehicle identifier
 - `status`: available | en-route | waiting | delayed | offline
 - `currentLocation`: Optional current location
+- `latitude`: GPS latitude coordinate (optional)
+- `longitude`: GPS longitude coordinate (optional)
 
 ### SwapPoint
 - `id`: Unique identifier
@@ -72,12 +75,17 @@ SwapTrack is a web application for tracking and coordinating truck drivers meeti
 - `address`: Full address
 - `capacity`: Maximum trucks allowed
 - `amenities`: Array of amenity types (parking, fuel, rest)
+- `latitude`: GPS latitude coordinate (optional)
+- `longitude`: GPS longitude coordinate (optional)
 
 ### Swap
 - `id`: Unique identifier
 - `driver1Id`: First driver
 - `driver2Id`: Second driver
-- `swapPointId`: Meeting location
+- `swapPointId`: Meeting location (optional - can use custom location instead)
+- `customLocation`: Custom location name/address (when not using existing swap point)
+- `customLatitude`: GPS latitude for custom location
+- `customLongitude`: GPS longitude for custom location
 - `scheduledTime`: Scheduled swap time
 - `status`: scheduled | in-progress | completed | cancelled
 - `notes`: Optional notes

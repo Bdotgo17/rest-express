@@ -8,7 +8,7 @@ interface SwapCardProps {
   swap: Swap;
   driver1?: Driver;
   driver2?: Driver;
-  swapPoint?: SwapPoint;
+  swapPoint?: SwapPoint | null;
 }
 
 export function SwapCard({ swap, driver1, driver2, swapPoint }: SwapCardProps) {
@@ -75,10 +75,12 @@ export function SwapCard({ swap, driver1, driver2, swapPoint }: SwapCardProps) {
           </div>
         </div>
         
-        {swapPoint && (
+        {(swapPoint || swap.customLocation) && (
           <div className="flex items-center gap-2 pt-4 border-t text-sm text-muted-foreground">
             <MapPin className="h-4 w-4 shrink-0" />
-            <span className="truncate" data-testid={`text-swap-location-${swap.id}`}>{swapPoint.name}</span>
+            <span className="truncate" data-testid={`text-swap-location-${swap.id}`}>
+              {swapPoint?.name || swap.customLocation}
+            </span>
           </div>
         )}
         

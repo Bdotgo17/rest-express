@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, MapPin } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,8 @@ const formSchema = z.object({
   address: z.string().min(5, "Address must be at least 5 characters"),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   amenities: z.array(z.string()),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -42,6 +44,8 @@ export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
       address: "",
       capacity: 4,
       amenities: [],
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -123,6 +127,49 @@ export function AddSwapPointDialog({ trigger }: AddSwapPointDialogProps) {
                 </FormItem>
               )}
             />
+            
+            <div className="border rounded-md p-4 space-y-4 bg-muted/30">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <MapPin className="h-4 w-4 text-primary" />
+                GPS Coordinates
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="33.4484" 
+                          {...field} 
+                          data-testid="input-swap-point-latitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="-112.0740" 
+                          {...field} 
+                          data-testid="input-swap-point-longitude"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             
             <FormField
               control={form.control}
