@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw, UserPlus, ArrowLeft } from "lucide-react";
+import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw, UserPlus, ArrowLeft, Map } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Driver } from "@shared/schema";
@@ -438,6 +439,17 @@ export default function DriverMobile() {
             )}
           </>
         )}
+
+        <Card>
+          <CardContent className="pt-4">
+            <Link href="/map">
+              <Button variant="outline" className="w-full" data-testid="button-view-map">
+                <Map className="h-4 w-4 mr-2" />
+                View Map - See All Drivers
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
         <div className="text-center text-xs text-muted-foreground pt-4">
           <p>Tip: Add this page to your home screen for quick access</p>
