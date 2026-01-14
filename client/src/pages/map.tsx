@@ -72,7 +72,7 @@ export default function Map() {
           <CardContent>
             {driversWithLocation.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No drivers with GPS coordinates
+                No drivers with GPS coordinates. Add coordinates when creating or editing drivers.
               </p>
             ) : (
               <div className="space-y-2">
@@ -106,7 +106,7 @@ export default function Map() {
           <CardContent>
             {swapPointsWithLocation.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No swap points with GPS coordinates
+                No swap points with GPS coordinates. Add coordinates when creating swap points.
               </p>
             ) : (
               <div className="space-y-2">

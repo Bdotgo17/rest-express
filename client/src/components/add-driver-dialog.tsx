@@ -186,9 +186,12 @@ export function AddDriverDialog({ trigger }: AddDriverDialogProps) {
             />
             
             <div className="border rounded-md p-4 space-y-4 bg-muted/30">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <MapPin className="h-4 w-4 text-primary" />
-                GPS Coordinates
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  GPS Coordinates
+                </div>
+                <span className="text-xs text-muted-foreground">Required for map display</span>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
