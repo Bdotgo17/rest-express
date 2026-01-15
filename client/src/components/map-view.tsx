@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Driver, SwapPoint, DriverStatus } from "@shared/schema";
-import { getETAFromCoords } from "@/lib/eta";
+import { useRoute } from "@/hooks/use-route";
 
 const driverIconColors: Record<DriverStatus, string> = {
   available: "#22c55e",
@@ -76,6 +76,53 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
   }, [map, positions]);
   
   return null;
+}
+
+interface DriverMarkerProps {
+  driver: Driver;
+  position: [number, number];
+  swapPoint?: SwapPoint;
+}
+
+function DriverMarker({ driver, position, swapPoint }: DriverMarkerProps) {
+  const { data: routeInfo, isLoading } = useRoute(
+    driver.latitude,
+    driver.longitude,
+    swapPoint?.latitude,
+    swapPoint?.longitude
+  );
+
+  return (
+    <Marker
+      position={position}
+      icon={createDriverIcon(driver.status as DriverStatus)}
+    >
+      <Popup>
+        <div className="text-sm" data-testid={`popup-driver-${driver.id}`}>
+          <p className="font-semibold" data-testid={`text-driver-name-${driver.id}`}>{driver.name}</p>
+          <p className="text-muted-foreground" data-testid={`text-driver-truck-${driver.id}`}>{driver.truckId}</p>
+          <p className="capitalize" data-testid={`text-driver-status-${driver.id}`}>{driver.status}</p>
+          {driver.currentLocation && (
+            <p className="text-xs text-muted-foreground">{driver.currentLocation}</p>
+          )}
+          {swapPoint && (
+            <div className="mt-2 pt-2 border-t">
+              <p className="text-xs font-medium">To {swapPoint.name}:</p>
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">Calculating...</p>
+              ) : routeInfo ? (
+                <p className="text-sm font-semibold" style={{ color: "#f97316" }} data-testid={`eta-to-swap-${driver.id}`}>
+                  {routeInfo.distance} mi - {routeInfo.eta}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Unable to calculate</p>
+              )}
+            </div>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
 }
 
 interface MapViewProps {
@@ -151,42 +198,14 @@ export function MapView({ drivers, swapPoints, className = "" }: MapViewProps) {
         
         {allPositions.length > 0 && <FitBounds positions={allPositions} />}
         
-        {driverPositions.map(({ driver, position }) => {
-          const nearestSwapPoint = swapPointPositions[0]?.swapPoint;
-          const eta = nearestSwapPoint ? getETAFromCoords(
-            driver.latitude,
-            driver.longitude,
-            nearestSwapPoint.latitude,
-            nearestSwapPoint.longitude
-          ) : null;
-          
-          return (
-            <Marker
-              key={`driver-${driver.id}`}
-              position={position}
-              icon={createDriverIcon(driver.status as DriverStatus)}
-            >
-              <Popup>
-                <div className="text-sm" data-testid={`popup-driver-${driver.id}`}>
-                  <p className="font-semibold" data-testid={`text-driver-name-${driver.id}`}>{driver.name}</p>
-                  <p className="text-muted-foreground" data-testid={`text-driver-truck-${driver.id}`}>{driver.truckId}</p>
-                  <p className="capitalize" data-testid={`text-driver-status-${driver.id}`}>{driver.status}</p>
-                  {driver.currentLocation && (
-                    <p className="text-xs text-muted-foreground">{driver.currentLocation}</p>
-                  )}
-                  {eta && nearestSwapPoint && (
-                    <div className="mt-2 pt-2 border-t">
-                      <p className="text-xs font-medium">To {nearestSwapPoint.name}:</p>
-                      <p className="text-sm font-semibold" style={{ color: "#f97316" }} data-testid={`eta-to-swap-${driver.id}`}>
-                        {eta.distance} mi - {eta.eta}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        {driverPositions.map(({ driver, position }) => (
+          <DriverMarker
+            key={`driver-${driver.id}`}
+            driver={driver}
+            position={position}
+            swapPoint={swapPointPositions[0]?.swapPoint}
+          />
+        ))}
         
         {swapPointPositions.map(({ swapPoint, position }) => (
           <Marker
