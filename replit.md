@@ -4,9 +4,9 @@
 SwapTrack is a web application for tracking and coordinating truck drivers meeting at swap points. It enables logistics teams to manage drivers, swap locations, and schedule driver handoffs efficiently.
 
 ## Current State
-- **Version**: 1.2 MVP
-- **Status**: Functional with in-memory storage and GPS/Map features
-- **Last Updated**: January 2026
+- **Version**: 1.3
+- **Status**: Production-ready with PostgreSQL storage, GPS/Map, OSRM routing
+- **Last Updated**: March 2026
 
 ## Features
 - **Dashboard**: Overview with stats (active drivers, swap points, active swaps, completed today)
@@ -37,8 +37,9 @@ Accessible at `/driver-app`, this mobile-friendly page allows drivers to:
 
 ### Backend (`server/`)
 - **Framework**: Express.js
-- **Storage**: In-memory storage (MemStorage class)
+- **Storage**: PostgreSQL via Drizzle ORM (DatabaseStorage class)
 - **API**: RESTful endpoints under `/api/`
+- **Routing**: OSRM for road distances with Haversine fallback
 
 ### Shared (`shared/`)
 - **Schema**: Drizzle ORM schemas with Zod validation
