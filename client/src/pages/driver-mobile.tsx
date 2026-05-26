@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw, UserPlus, ArrowLeft, Map, Square } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Navigation, Loader2, CheckCircle, XCircle, Truck, RefreshCw, UserPlus, ArrowLeft, Map, Square, ArrowLeftRight, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Driver } from "@shared/schema";
+import { useRoute } from "@/hooks/use-route";
+import type { Driver, Swap, SwapPoint } from "@shared/schema";
 
 const statusColors: Record<string, string> = {
   available: "bg-green-500",
@@ -26,6 +28,170 @@ const statusLabels: Record<string, string> = {
   offline: "Offline",
 };
 
+function ETABadge({
+  fromLat,
+  fromLon,
+  toLat,
+  toLon,
+  label,
+}: {
+  fromLat: string | null | undefined;
+  fromLon: string | null | undefined;
+  toLat: string | null | undefined;
+  toLon: string | null | undefined;
+  label: string;
+}) {
+  const { data: routeInfo, isLoading } = useRoute(fromLat, fromLon, toLat, toLon);
+
+  if (!fromLat || !fromLon || !toLat || !toLon) {
+    return (
+      <div className="text-xs text-muted-foreground italic">No GPS yet</div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Calculating...</span>
+      </div>
+    );
+  }
+
+  if (!routeInfo) {
+    return <div className="text-xs text-muted-foreground italic">ETA unavailable</div>;
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
+        <Navigation className="h-3 w-3 text-primary" />
+        <span>{routeInfo.eta}</span>
+      </div>
+      <div className="text-xs text-muted-foreground">{routeInfo.distance} mi away</div>
+    </div>
+  );
+}
+
+function SwapInfoCard({
+  swap,
+  myDriver,
+  otherDriver,
+  swapPoint,
+}: {
+  swap: Swap;
+  myDriver: Driver;
+  otherDriver: Driver | undefined;
+  swapPoint: SwapPoint | undefined;
+}) {
+  const destLat = swapPoint?.latitude || swap.customLatitude;
+  const destLon = swapPoint?.longitude || swap.customLongitude;
+  const locationName = swapPoint?.name || swap.customLocation || "Custom Location";
+
+  const formatTime = (timeStr: string) => {
+    try {
+      const date = new Date(timeStr);
+      return date.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return timeStr;
+    }
+  };
+
+  const swapStatusColor: Record<string, string> = {
+    scheduled: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+    "in-progress": "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+    completed: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
+    cancelled: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800",
+  };
+
+  return (
+    <Card className="border-primary/40" data-testid={`card-swap-info-${swap.id}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4 text-primary" />
+            Your Swap
+          </CardTitle>
+          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${swapStatusColor[swap.status] || ""}`}>
+            {swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>{formatTime(swap.scheduledTime)}</span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {(destLat && destLon) ? (
+          <div className="flex items-center gap-1.5 p-2 bg-muted rounded-md text-sm">
+            <MapPin className="h-4 w-4 text-primary shrink-0" />
+            <span className="font-medium truncate">{locationName}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 p-2 bg-muted rounded-md text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span>{locationName} (no GPS coordinates)</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${statusColors[myDriver.status]}`} />
+              <span className="text-xs font-semibold truncate max-w-[90px]">{myDriver.name}</span>
+            </div>
+            <div className="text-xs text-muted-foreground">You</div>
+            <ETABadge
+              fromLat={myDriver.latitude}
+              fromLon={myDriver.longitude}
+              toLat={destLat}
+              toLon={destLon}
+              label="me"
+            />
+          </div>
+
+          <div className="flex flex-col items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+            {otherDriver ? (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${statusColors[otherDriver.status]}`} />
+                  <span className="text-xs font-semibold truncate max-w-[90px]">{otherDriver.name}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">{statusLabels[otherDriver.status]}</div>
+                <ETABadge
+                  fromLat={otherDriver.latitude}
+                  fromLon={otherDriver.longitude}
+                  toLat={destLat}
+                  toLon={destLon}
+                  label="other"
+                />
+              </>
+            ) : (
+              <div className="text-xs text-muted-foreground italic text-center">Other driver not found</div>
+            )}
+          </div>
+        </div>
+
+        {!destLat || !destLon ? (
+          <p className="text-xs text-muted-foreground text-center italic">
+            ETAs will appear once the swap point has GPS coordinates.
+          </p>
+        ) : (!myDriver.latitude || !myDriver.longitude) ? (
+          <p className="text-xs text-muted-foreground text-center italic">
+            Your ETA will appear once your GPS is shared.
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DriverMobile() {
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
   const [isTracking, setIsTracking] = useState(false);
@@ -40,9 +206,27 @@ export default function DriverMobile() {
 
   const { data: drivers = [], isLoading: driversLoading } = useQuery<Driver[]>({
     queryKey: ["/api/drivers"],
+    refetchInterval: isTracking ? 15000 : false,
+  });
+
+  const { data: swaps = [] } = useQuery<Swap[]>({
+    queryKey: ["/api/swaps"],
+    refetchInterval: isTracking ? 15000 : false,
+    enabled: isTracking,
+  });
+
+  const { data: swapPoints = [] } = useQuery<SwapPoint[]>({
+    queryKey: ["/api/swap-points"],
+    enabled: isTracking,
   });
 
   const selectedDriver = drivers.find(d => d.id === selectedDriverId);
+
+  const activeSwaps = swaps.filter(
+    s =>
+      (s.driver1Id === selectedDriverId || s.driver2Id === selectedDriverId) &&
+      (s.status === "scheduled" || s.status === "in-progress")
+  );
 
   const registerMutation = useMutation({
     mutationFn: async (data: { name: string; phone: string; truckId: string; status: string }) => {
@@ -129,7 +313,7 @@ export default function DriverMobile() {
 
   const getCurrentPosition = useCallback((driverId?: string) => {
     const targetDriverId = driverId || selectedDriverId;
-    
+
     if (!navigator.geolocation) {
       setLocationError("GPS is not supported by your browser");
       return;
@@ -141,7 +325,7 @@ export default function DriverMobile() {
       (position) => {
         const { latitude, longitude } = position.coords;
         setCurrentPosition({ lat: latitude, lng: longitude });
-        
+
         if (targetDriverId) {
           updateLocationMutation.mutate({
             driverId: targetDriverId,
@@ -250,6 +434,25 @@ export default function DriverMobile() {
               </CardContent>
             </Card>
 
+            {activeSwaps.length > 0 && (
+              <div className="space-y-3">
+                {activeSwaps.map(swap => {
+                  const otherId = swap.driver1Id === selectedDriverId ? swap.driver2Id : swap.driver1Id;
+                  const otherDriver = drivers.find(d => d.id === otherId);
+                  const swapPoint = swap.swapPointId ? swapPoints.find(sp => sp.id === swap.swapPointId) : undefined;
+                  return (
+                    <SwapInfoCard
+                      key={swap.id}
+                      swap={swap}
+                      myDriver={selectedDriver}
+                      otherDriver={otherDriver}
+                      swapPoint={swapPoint}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Your Status</CardTitle>
@@ -336,9 +539,9 @@ export default function DriverMobile() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowRegister(false)}
                   data-testid="button-back-to-select"
                 >
@@ -381,8 +584,8 @@ export default function DriverMobile() {
                   data-testid="input-register-truck"
                 />
               </div>
-              <Button 
-                onClick={handleRegister} 
+              <Button
+                onClick={handleRegister}
                 className="w-full"
                 disabled={registerMutation.isPending}
                 data-testid="button-register-submit"
@@ -422,10 +625,10 @@ export default function DriverMobile() {
                   </div>
                 </button>
               ))}
-              
+
               <div className="pt-2 border-t mt-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => setShowRegister(true)}
                   data-testid="button-register-new"
