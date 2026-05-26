@@ -136,15 +136,6 @@ export default function DriverMobile() {
     }
   };
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async (status: string) => {
-      return apiRequest("PATCH", `/api/drivers/${selectedDriverId}`, { status });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
-    },
-  });
-
   const updateLocationMutation = useMutation({
     mutationFn: async (data: { driverId: string; latitude: string; longitude: string }) => {
       return apiRequest("PATCH", `/api/drivers/${data.driverId}`, {
@@ -329,30 +320,6 @@ export default function DriverMobile() {
                 Stop
               </Button>
             </div>
-
-            <Card>
-              <CardContent className="pt-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${statusColors[selectedDriver?.status || "offline"]}`} />
-                  <span className="text-sm font-medium">Status: {statusLabels[selectedDriver?.status || "offline"]}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(statusLabels).filter(([key]) => key !== "offline").map(([key, label]) => (
-                    <Button
-                      key={key}
-                      variant={selectedDriver?.status === key ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => updateStatusMutation.mutate(key)}
-                      disabled={updateStatusMutation.isPending}
-                      className="w-full"
-                      data-testid={`button-status-${key}`}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
 
             {locationError && (
               <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
