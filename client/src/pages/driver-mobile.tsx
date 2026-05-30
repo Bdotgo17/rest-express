@@ -18,7 +18,9 @@ function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolea
     TOYAH_LON
   );
 
-  const label = driver?.name?.includes("Abilene") ? "Abilene" : "Las Cruces";
+  const label = driver?.name?.toLowerCase().includes("merkle") ? "Merkle, TX"
+    : driver?.name?.toLowerCase().includes("las cruces") ? "Las Cruces"
+    : driver?.name ?? "";
 
   return (
     <div className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
@@ -65,7 +67,7 @@ export default function DriverApp() {
     refetchInterval: isTracking ? 15000 : false,
   });
 
-  const abileneDriver = drivers.find(d => d.name.toLowerCase().includes("abilene"));
+  const abileneDriver = drivers.find(d => d.name.toLowerCase().includes("merkle"));
   const lasCrucesDriver = drivers.find(d => d.name.toLowerCase().includes("las cruces"));
   const selectedDriver = drivers.find(d => d.id === selectedDriverId);
 
@@ -157,7 +159,7 @@ export default function DriverApp() {
               className="w-full py-4 rounded-2xl bg-orange-500 text-white text-lg font-bold shadow-md active:scale-95 transition-transform"
               data-testid="button-select-abilene"
             >
-              Abilene
+              Merkle, TX
             </button>
           )}
           {lasCrucesDriver && (
