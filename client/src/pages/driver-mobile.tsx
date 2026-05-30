@@ -18,9 +18,7 @@ function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolea
     TOYAH_LON
   );
 
-  const label = driver?.name?.toLowerCase().includes("merkle") ? "Merkle, TX"
-    : driver?.name?.toLowerCase().includes("las cruces") ? "Las Cruces"
-    : driver?.name ?? "";
+  const label = driver?.name?.toLowerCase().includes("las cruces") ? "Las Cruces" : "Merkle, TX";
 
   return (
     <div className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
@@ -67,7 +65,7 @@ export default function DriverApp() {
     refetchInterval: isTracking ? 15000 : false,
   });
 
-  const abileneDriver = drivers.find(d => d.name.toLowerCase().includes("merkle"));
+  const abileneDriver = drivers.find(d => !d.name.toLowerCase().includes("las cruces"));
   const lasCrucesDriver = drivers.find(d => d.name.toLowerCase().includes("las cruces"));
   const selectedDriver = drivers.find(d => d.id === selectedDriverId);
 
