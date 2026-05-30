@@ -21,13 +21,13 @@ function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolea
   const label = driver?.name?.includes("Abilene") ? "Abilene" : "Las Cruces";
 
   return (
-    <div className={`flex-1 flex flex-col items-center gap-2 p-5 rounded-2xl border-2 ${
+    <div className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
       isMe ? "border-orange-400 bg-orange-50" : "border-gray-200 bg-gray-50"
     }`} data-testid={`eta-block-${label.toLowerCase().replace(" ", "-")}`}>
-      <div className="text-base font-bold text-gray-800">{label}</div>
+      <div className="text-sm font-bold text-gray-800">{label}</div>
       {isMe && <div className="text-xs font-semibold text-orange-500 uppercase tracking-wide">You</div>}
 
-      <div className="w-full border-t border-gray-200 my-1" />
+      <div className="w-full border-t border-gray-200 my-0.5" />
 
       {!driver?.latitude || !driver?.longitude ? (
         <div className="text-xs text-gray-400 text-center italic">
@@ -39,12 +39,12 @@ function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolea
           <span>Calculating...</span>
         </div>
       ) : routeInfo ? (
-        <div className="flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-1 text-3xl font-bold text-gray-900">
-            <Navigation className="h-6 w-6 text-orange-400" />
+        <div className="flex flex-col items-center gap-0">
+          <div className="flex items-center gap-1 text-2xl font-bold text-gray-900">
+            <Navigation className="h-4 w-4 text-orange-400" />
             <span>{routeInfo.eta}</span>
           </div>
-          <div className="text-sm text-gray-500">{routeInfo.distance} miles</div>
+          <div className="text-xs text-gray-500">{routeInfo.distance} mi</div>
         </div>
       ) : (
         <div className="text-xs text-gray-400 italic">ETA unavailable</div>
@@ -135,26 +135,26 @@ export default function DriverApp() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-5 pt-12 pb-10 max-w-sm mx-auto">
+    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-6 pb-6 max-w-sm mx-auto">
 
-      <div className="text-center mb-8">
-        <div className="text-4xl mb-2">🔄</div>
-        <h1 className="text-2xl font-bold text-gray-900">Swap Meet</h1>
-        <p className="text-gray-500 text-sm mt-1">Meeting in <span className="font-semibold text-orange-500">{TOYAH_NAME}</span></p>
+      <div className="text-center mb-4">
+        <div className="text-2xl mb-1">🔄</div>
+        <h1 className="text-xl font-bold text-gray-900">Swap Meet</h1>
+        <p className="text-gray-500 text-xs mt-0.5">Meeting in <span className="font-semibold text-orange-500">{TOYAH_NAME}</span></p>
       </div>
 
-      <div className="flex gap-3 w-full mb-6">
+      <div className="flex gap-2 w-full mb-4">
         <ETADisplay driver={abileneDriver} isMe={selectedDriverId === abileneDriver?.id} />
         <ETADisplay driver={lasCrucesDriver} isMe={selectedDriverId === lasCrucesDriver?.id} />
       </div>
 
       {!isTracking ? (
-        <div className="w-full space-y-3">
-          <p className="text-center text-sm text-gray-400 font-medium">Who are you?</p>
+        <div className="w-full space-y-2">
+          <p className="text-center text-xs text-gray-400 font-medium">Who are you?</p>
           {abileneDriver && (
             <button
               onClick={() => handleSelect(abileneDriver.id)}
-              className="w-full py-5 rounded-2xl bg-orange-500 text-white text-xl font-bold shadow-md active:scale-95 transition-transform"
+              className="w-full py-4 rounded-2xl bg-orange-500 text-white text-lg font-bold shadow-md active:scale-95 transition-transform"
               data-testid="button-select-abilene"
             >
               Abilene
@@ -163,7 +163,7 @@ export default function DriverApp() {
           {lasCrucesDriver && (
             <button
               onClick={() => handleSelect(lasCrucesDriver.id)}
-              className="w-full py-5 rounded-2xl bg-gray-800 text-white text-xl font-bold shadow-md active:scale-95 transition-transform"
+              className="w-full py-4 rounded-2xl bg-gray-800 text-white text-lg font-bold shadow-md active:scale-95 transition-transform"
               data-testid="button-select-las-cruces"
             >
               Las Cruces
@@ -171,20 +171,18 @@ export default function DriverApp() {
           )}
         </div>
       ) : (
-        <div className="w-full space-y-3">
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-green-50 border border-green-200">
-            <div className="flex items-center gap-2">
-              <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-semibold text-green-700">
-                Sharing location as <span className="text-green-900">
-                  {selectedDriver?.name?.includes("Abilene") ? "Abilene" : "Las Cruces"}
-                </span>
+        <div className="w-full space-y-2">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+            <span className="text-sm font-semibold text-green-700">
+              Sharing as <span className="text-green-900">
+                {selectedDriver?.name?.includes("Abilene") ? "Abilene" : "Las Cruces"}
               </span>
-            </div>
+            </span>
           </div>
 
           {locationError && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-sm">
+            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs">
               <XCircle className="h-4 w-4 shrink-0" />
               {locationError}
             </div>
@@ -209,7 +207,7 @@ export default function DriverApp() {
 
           <button
             onClick={handleStop}
-            className="w-full py-3 rounded-2xl border-2 border-gray-200 text-gray-500 text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full py-2.5 rounded-xl border-2 border-gray-200 text-gray-500 text-sm font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform"
             data-testid="button-stop-tracking"
           >
             <Square className="h-4 w-4" />
@@ -218,7 +216,7 @@ export default function DriverApp() {
         </div>
       )}
 
-      <p className="text-xs text-gray-300 text-center mt-8">
+      <p className="text-xs text-gray-300 text-center mt-4">
         Location updates every 30 seconds
       </p>
     </div>
