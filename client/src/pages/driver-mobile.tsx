@@ -18,7 +18,7 @@ function ETADisplay({ driver, isMe, showMiles }: { driver: Driver | undefined; i
     TOYAH_LON
   );
 
-  const label = driver?.name?.toLowerCase().includes("las cruces") ? "Las Cruces" : "Merkle, TX";
+  const label = driver?.name?.toLowerCase().includes("las cruces") ? "Las Cruces, NM" : "Merkle, TX";
 
   return (
     <div className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
@@ -166,7 +166,7 @@ export default function DriverApp() {
               className="w-full py-4 rounded-2xl bg-gray-800 text-white text-lg font-bold shadow-md active:scale-95 transition-transform"
               data-testid="button-select-las-cruces"
             >
-              Las Cruces
+              Las Cruces, NM
             </button>
           )}
         </div>
