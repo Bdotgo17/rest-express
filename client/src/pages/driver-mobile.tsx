@@ -86,12 +86,13 @@ export default function DriverApp() {
         d => d.name.toLowerCase() === fullName.toLowerCase()
       );
       if (existing) return existing;
-      return apiRequest("POST", "/api/drivers", {
+      const res = await apiRequest("POST", "/api/drivers", {
         name: fullName,
         phone: "000-000-0000",
         truckId: `TRK-${name.toUpperCase().slice(0, 4)}-${Date.now().toString().slice(-4)}`,
         status: "en-route",
       });
+      return res.json();
     },
     onSuccess: (driver: Driver) => {
       setMyDriverId(driver.id);
