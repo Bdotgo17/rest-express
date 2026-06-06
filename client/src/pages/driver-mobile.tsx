@@ -10,7 +10,7 @@ const TOYAH_LAT = "31.3138";
 const TOYAH_LON = "-103.7960";
 const TOYAH_NAME = "Toyah, TX";
 
-function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolean }) {
+function ETADisplay({ driver, isMe, showMiles }: { driver: Driver | undefined; isMe: boolean; showMiles: boolean }) {
   const { data: routeInfo, isLoading } = useRoute(
     driver?.latitude,
     driver?.longitude,
@@ -44,7 +44,7 @@ function ETADisplay({ driver, isMe }: { driver: Driver | undefined; isMe: boolea
             <Navigation className="h-4 w-4 text-orange-400" />
             <span>{routeInfo.eta}</span>
           </div>
-          <div className="text-xs text-gray-500">{routeInfo.distance} mi</div>
+          {showMiles && <div className="text-xs text-gray-500">{routeInfo.distance} mi</div>}
         </div>
       ) : (
         <div className="text-xs text-gray-400 italic">ETA unavailable</div>
@@ -144,8 +144,8 @@ export default function DriverApp() {
       </div>
 
       <div className="flex gap-2 w-full mb-4">
-        <ETADisplay driver={abileneDriver} isMe={selectedDriverId === abileneDriver?.id} />
-        <ETADisplay driver={lasCrucesDriver} isMe={selectedDriverId === lasCrucesDriver?.id} />
+        <ETADisplay driver={abileneDriver} isMe={selectedDriverId === abileneDriver?.id} showMiles={isTracking} />
+        <ETADisplay driver={lasCrucesDriver} isMe={selectedDriverId === lasCrucesDriver?.id} showMiles={isTracking} />
       </div>
 
       {!isTracking ? (
