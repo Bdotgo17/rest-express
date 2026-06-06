@@ -44,9 +44,12 @@ function DriverETARow({ driver, isMe }: { driver: Driver; isMe: boolean }) {
         ) : isLoading ? (
           <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
         ) : routeInfo ? (
-          <div className="flex items-center gap-1">
-            <Navigation className="h-3 w-3 text-orange-400" />
-            <span className="text-sm font-bold text-gray-900">{routeInfo.eta}</span>
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-1">
+              <Navigation className="h-3 w-3 text-orange-400" />
+              <span className="text-sm font-bold text-gray-900">{routeInfo.eta}</span>
+            </div>
+            <span className="text-xs text-gray-400">{routeInfo.distance} mi</span>
           </div>
         ) : (
           <span className="text-xs text-gray-400">—</span>
