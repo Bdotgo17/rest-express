@@ -6,9 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useRoute } from "@/hooks/use-route";
 import type { Driver } from "@shared/schema";
 
-const TOYAH_LAT = "31.3138";
-const TOYAH_LON = "-103.7960";
-const TOYAH_NAME = "Toyah, TX";
+const TOYAH_LAT = "31.3147652";
+const TOYAH_LON = "-103.7931630";
+const TOYAH_NAME = "Valero, Toyah TX";
 
 const CITIES = {
   merkle: { label: "Merkle, TX", prefix: "Merkle" },
