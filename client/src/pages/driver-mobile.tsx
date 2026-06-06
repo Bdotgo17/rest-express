@@ -154,7 +154,11 @@ export default function DriverApp() {
     toast({ title: "Tracking started", description: "Your location is now being shared." });
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
+    if (myDriverId) {
+      await apiRequest("DELETE", `/api/drivers/${myDriverId}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+    }
     setIsTracking(false);
     setMyDriverId(null);
     setDriverName("");
